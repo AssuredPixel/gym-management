@@ -8,6 +8,8 @@ export interface IMembership extends Document {
   endDate: Date;
   status: 'active' | 'expiring' | 'expired';
   stripeSubscriptionId?: string;
+  paystackSubscriptionCode?: string;
+  paystackCustomerCode?: string;
   autoRenew: boolean;
   createdAt: Date;
 }
@@ -20,6 +22,8 @@ const MembershipSchema: Schema = new Schema({
   endDate: { type: Date, required: true },
   status: { type: String, enum: ['active', 'expiring', 'expired'], required: true },
   stripeSubscriptionId: { type: String },
+  paystackSubscriptionCode: { type: String },
+  paystackCustomerCode: { type: String },
   autoRenew: { type: Boolean, default: true },
 }, {
   timestamps: true

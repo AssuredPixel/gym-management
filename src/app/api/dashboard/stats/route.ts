@@ -62,7 +62,7 @@ export async function GET() {
           $match: { 
             gymId: gymObjectId,
             createdAt: { $gte: monthStart, $lte: monthEnd },
-            status: "completed"
+            status: { $in: ["paid", "completed"] }
           } 
         },
         { $group: { _id: null, total: { $sum: "$amount" } } }
