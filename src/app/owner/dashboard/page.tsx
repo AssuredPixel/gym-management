@@ -23,11 +23,11 @@ interface DashboardStats {
   classesTodayCount: number;
   classesToday: Array<{
     _id: string;
-    name: string;
-    instructor: string;
+    title: string;
+    coach: string;
     dateTime: string;
     capacity: number;
-    attendees: string[];
+    bookedCount: number;
   }>;
   expiringMembers: Array<{
     id: string;
@@ -141,7 +141,7 @@ export default function DashboardPage() {
         />
         <KPICard 
           title="Monthly Revenue" 
-          value={`$${stats.revenueThisMonth.toLocaleString()}`} 
+          value={`$${((stats?.revenueThisMonth || 0) / 100).toLocaleString()}`} 
           icon={DollarSign} 
           subtext="Target: $5,000"
         />
@@ -165,9 +165,9 @@ export default function DashboardPage() {
           </div>
           
           <div className="space-y-6">
-            {stats.recentActivity.length > 0 ? (
+            { (stats?.recentActivity?.length || 0) > 0 ? (
               stats.recentActivity.map((log, i) => (
-                <div key={log._id} className={`flex items-start gap-4 pb-6 ${i !== stats.recentActivity.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                <div key={log._id} className={`flex items-start gap-4 pb-6 ${i !== (stats?.recentActivity?.length || 0) - 1 ? 'border-b border-gray-50' : ''}`}>
                   <div className={`p-2 rounded-lg ${
                     log.type === 'member_added' ? 'bg-green-50 text-green-600' : 
                     log.type === 'payment_received' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
@@ -197,12 +197,12 @@ export default function DashboardPage() {
             </div>
             <div>
               <h4 className="text-sm font-black text-amber-800 uppercase tracking-tighter">Membership Expiring</h4>
-              <p className="text-xs text-amber-600 font-bold">Action required for {stats.expiringMembers.length} members</p>
+              <p className="text-xs text-amber-600 font-bold">Action required for {stats?.expiringMembers?.length || 0} members</p>
             </div>
           </div>
           
           <div className="p-6 flex-1 space-y-4">
-            {stats.expiringMembers.map((member) => (
+            {(stats?.expiringMembers || []).map((member) => (
               <div key={member.id} className="flex justify-between items-center group">
                 <div>
                   <p className="text-sm font-bold text-text-primary">{member.name}</p>
@@ -219,7 +219,7 @@ export default function DashboardPage() {
                 </button>
               </div>
             ))}
-            {stats.expiringMembers.length === 0 && (
+            {(stats?.expiringMembers?.length || 0) === 0 && (
                 <p className="text-gray-400 text-center py-10 text-xs font-bold uppercase tracking-widest opacity-30">All memberships secure</p>
             )}
           </div>
@@ -241,16 +241,16 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-            {stats.classesToday.length > 0 ? (
-                stats.classesToday.map((cls) => (
+            { (stats?.classesToday?.length || 0) > 0 ? (
+                (stats?.classesToday || []).map((cls) => (
                     <div key={cls._id} className="min-w-[240px] flex-shrink-0 border border-gray-100 rounded-xl p-5 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group">
                         <span className="text-primary text-xs font-black tracking-widest">
                           {new Date(cls.dateTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
                         </span>
-                        <h4 className="text-lg font-black text-[#1A1A2E] mt-1 mb-2 group-hover:text-primary transition-colors">{cls.name}</h4>
+                        <h4 className="text-lg font-black text-[#1A1A2E] mt-1 mb-2 group-hover:text-primary transition-colors">{cls.title}</h4>
                         <div className="flex justify-between items-center pt-3 border-t border-gray-50">
-                            <span className="text-xs text-gray-500 font-medium">{cls.instructor}</span>
-                            <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-1 rounded-md">{cls.attendees.length}/{cls.capacity} spots</span>
+                            <span className="text-xs text-gray-500 font-medium">{cls.coach}</span>
+                            <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-1 rounded-md">{cls.bookedCount}/{cls.capacity} spots</span>
                         </div>
                     </div>
                 ))

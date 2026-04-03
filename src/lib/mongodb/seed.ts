@@ -153,6 +153,7 @@ export async function seedDatabase() {
   }
 
   // ─── 4. Activity Logs ─────────────────────────────────────────────────────
+  console.log("Seeding Activity Logs...");
   await ActivityLog.deleteMany({ gymId: gym._id });
   await ActivityLog.create([
     { gymId: gym._id, type: "member_added", description: "Sarah Johnson joined the box", createdAt: daysAgo(90) },
@@ -162,29 +163,79 @@ export async function seedDatabase() {
     { gymId: gym._id, type: "payment_received", description: "Payment of $89 received from Marcus Bell", createdAt: daysAgo(20) },
     { gymId: gym._id, type: "class_created", description: "New Early Bird WOD class scheduled", createdAt: daysAgo(3) },
   ]);
-  console.log("Seeded Activity Logs");
+  console.log("SUCCESS: Activity Logs seeded");
 
   // ─── 5. Payments ──────────────────────────────────────────────────────────
   await Payment.deleteMany({ gymId: gym._id });
 
-  const planAmounts: Record<string, number> = { monthly: 89, quarterly: 240, annual: 840 };
+  const planPriceInCents: Record<string, number> = { monthly: 8900, quarterly: 24000, annual: 84000 };
   const paymentDocs = [];
+  let invoiceCounter = 1;
+  const year = new Date().getFullYear();
 
+  // 5a. Create historical payments for the last 6 months to populate the chart
+  for (let monthOffset = 5; monthOffset >= 1; monthOffset--) {
+    const historicalDate = new Date();
+    historicalDate.setMonth(historicalDate.getMonth() - monthOffset);
+    
+    createdMembers.forEach((user, idx) => {
+      if (testMembers[idx].plan === 'monthly' || (monthOffset % 3 === 0)) {
+        paymentDocs.push({
+          gymId: gym._id,
+          userId: user._id,
+          amount: planPriceInCents[testMembers[idx].plan],
+          method: Math.random() > 0.5 ? 'cash' : 'paystack',
+          status: 'paid',
+          description: "Monthly Membership Fee",
+          createdAt: historicalDate,
+          invoiceNumber: `INV-${year}-S${String(invoiceCounter++).padStart(4, '0')}` // Using 'S' prefix for seeded data
+        });
+      }
+    });
+  }
+
+  // 5b. Create current month payments (dashboard default view)
   for (let i = 0; i < createdMembers.length; i++) {
     const user = createdMembers[i];
     const memberDef = testMembers[i];
-    const amount = planAmounts[memberDef.plan];
+    const amount = planPriceInCents[memberDef.plan];
 
-    // All payments use recent createdAt so the dashboard monthly revenue filter picks them up
-    paymentDocs.push({ gymId: gym._id, userId: user._id, amount, status: "completed", createdAt: daysAgo(3) });
-    if (memberDef.status !== "expired") {
-      // Active/expiring members get a second payment from earlier in the month
-      paymentDocs.push({ gymId: gym._id, userId: user._id, amount, status: "completed", createdAt: daysAgo(1) });
+    if (memberDef.status === "active" || memberDef.status === "expiring") {
+      paymentDocs.push({ 
+        gymId: gym._id, 
+        userId: user._id, 
+        amount, 
+        method: i % 2 === 0 ? 'cash' : 'paystack',
+        status: "paid", 
+        description: `Payment for ${memberDef.plan} plan`,
+        createdAt: daysAgo(1),
+        invoiceNumber: `INV-${year}-S${String(invoiceCounter++).padStart(4, '0')}`
+      });
+    } else if (memberDef.status === "expired") {
+      paymentDocs.push({ 
+        gymId: gym._id, 
+        userId: user._id, 
+        amount, 
+        method: 'paystack',
+        status: "failed", 
+        description: "Declined: Insufficient Funds",
+        createdAt: daysAgo(30),
+        invoiceNumber: `INV-${year}-S${String(invoiceCounter++).padStart(4, '0')}`
+      });
     }
   }
 
-  await Payment.create(paymentDocs);
-  console.log(`Seeded ${paymentDocs.length} payments`);
+  console.log(`Starting individual payment insertion for ${paymentDocs.length} documents...`);
+  // Insert documents individually if bulk create is failing
+  for (let i = 0; i < paymentDocs.length; i++) {
+    try {
+      await Payment.create(paymentDocs[i]);
+    } catch (err) {
+      console.error(`FAILED to create payment ${i}:`, paymentDocs[i].invoiceNumber);
+      throw err;
+    }
+  }
+  console.log(`SUCCESS: Seeded ${paymentDocs.length} payments with historical data`);
 
   // ─── 6. WOD Classes (with member attendees) ───────────────────────────────
   await WODClass.deleteMany({ gymId: gym._id });
@@ -196,35 +247,31 @@ export async function seedDatabase() {
   await WODClass.create([
     {
       gymId: gym._id,
-      name: "Early Bird WOD",
-      instructor: "James Carter",
+      title: "Early Bird WOD",
+      coach: "James Carter",
       dateTime: daysAgo(7),
       capacity: 20,
-      attendees: allAttendees,
     },
     {
       gymId: gym._id,
-      name: "Lunch Strength",
-      instructor: "James Carter",
+      title: "Lunch Strength",
+      coach: "James Carter",
       dateTime: daysAgo(3),
       capacity: 15,
-      attendees: [createdMembers[0]._id, createdMembers[2]._id],
     },
     {
       gymId: gym._id,
-      name: "Friday Conditioning",
-      instructor: "James Carter",
+      title: "Friday Conditioning",
+      coach: "James Carter",
       dateTime: daysAgo(1),
       capacity: 20,
-      attendees: [createdMembers[0]._id, createdMembers[1]._id, createdMembers[4]._id],
     },
     {
       gymId: gym._id,
-      name: "Saturday Throwdown",
-      instructor: "James Carter",
+      title: "Saturday Throwdown",
+      coach: "James Carter",
       dateTime: daysFromNow(1),
       capacity: 20,
-      attendees: [],
     },
   ]);
   console.log("Seeded WOD Classes");

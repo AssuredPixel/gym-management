@@ -85,6 +85,16 @@ export async function GET() {
         .limit(5)
     ]);
 
+    // Format classes for dashboard consumption
+    const formattedClassesToday = classesToday.map((cls: any) => ({
+      _id: cls._id,
+      title: cls.title,
+      coach: cls.coach,
+      dateTime: cls.dateTime,
+      capacity: cls.capacity,
+      bookedCount: cls.bookedCount
+    }));
+
     // Format revenue
     const revenueThisMonth = revenueStats.length > 0 ? revenueStats[0].total : 0;
 
@@ -94,7 +104,7 @@ export async function GET() {
       revenueThisMonth,
       classesThisWeek,
       classesTodayCount: classesToday.length,
-      classesToday,
+      classesToday: formattedClassesToday,
       expiringMembers: expiringMembers.map((m: any) => ({
         id: m._id,
         name: m.userId.name,

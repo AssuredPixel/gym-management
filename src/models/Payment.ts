@@ -93,21 +93,15 @@ const PaymentSchema: Schema = new Schema(
 );
 
 // ─── Auto-generate invoice number before save ─────────────────────────────────
-PaymentSchema.pre('save', function (this: any, next: any) {
+PaymentSchema.pre('save', function (this: any) {
   if (!this.invoiceNumber) {
     this.invoiceNumber = generateInvoiceNumber();
   }
-  next();
 });
 
-// ─── Also handle insertMany / create (which bypasses 'save' hooks) ────────────
-// We attach a pre-validate hook so mongoose.create([...]) also gets numbers.
-PaymentSchema.pre('validate', function (this: any, next: any) {
-  if (!this.invoiceNumber) {
-    this.invoiceNumber = generateInvoiceNumber();
-  }
-  next();
-});
+if (mongoose.models.Payment) {
+  delete mongoose.models.Payment;
+}
 
-export default mongoose.models.Payment ||
-  mongoose.model<IPayment>('Payment', PaymentSchema);
+const PaymentModel = mongoose.model<IPayment>('Payment', PaymentSchema);
+export default PaymentModel;
