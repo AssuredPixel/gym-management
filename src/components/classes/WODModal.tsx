@@ -41,6 +41,8 @@ export default function WODModal({
   isOpen 
 }: WODModalProps) {
   const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role;
+  const userName = session?.user?.name || "Coach";
   
   const {
     register,
@@ -56,7 +58,7 @@ export default function WODModal({
       capacity: 20,
       classType: "wod",
       publishImmediately: true,
-      coach: session?.user?.name || "Coach",
+      coach: userName,
     },
   });
 
@@ -86,7 +88,7 @@ export default function WODModal({
           time: defaultDateTime.toTimeString().slice(0, 5),
           durationMinutes: 60,
           capacity: 20,
-          coach: session?.user?.name || "Coach",
+          coach: userName,
           classType: "wod",
           description: "",
           publishImmediately: true,
@@ -98,7 +100,7 @@ export default function WODModal({
           time: "",
           durationMinutes: 60,
           capacity: 20,
-          coach: session?.user?.name || "Coach",
+          coach: userName,
           classType: "wod",
           description: "",
           publishImmediately: true,
@@ -111,7 +113,7 @@ export default function WODModal({
     return () => {
       document.body.style.overflow = "unset";
     };
-  }, [isOpen, mode, wodClass, defaultDateTime, reset, session]);
+  }, [isOpen, mode, wodClass, defaultDateTime, reset, userName]);
 
   if (!isOpen) return null;
 
@@ -152,7 +154,7 @@ export default function WODModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#1A1A2E]/60 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-[600px] max-h-[90vh] rounded-[24px] shadow-2xl flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
-        {/* Header (Fixed) */}
+        {/* Header */}
         <div className="p-8 pb-4 flex justify-between items-start shrink-0">
           <div>
             <h2 className="text-2xl font-black text-[#1A1A2E] tracking-tight">
@@ -170,28 +172,28 @@ export default function WODModal({
           </button>
         </div>
 
-        {/* Form Body (Scrollable) */}
+        {/* Form Body */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
           <div className="flex-1 overflow-y-auto p-8 pt-4 space-y-6 custom-scrollbar">
-            {/* Row 1: WOD Name */}
+            {/* WOD Name */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">WOD Name</label>
               <input 
                 {...register("title")}
                 placeholder="e.g. Fran, Helen, Open WOD..."
-                className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#E8541A]/20 focus:border-[#E8541A] transition-all outline-none"
+                className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
               />
               {errors.title && <p className="text-[10px] font-bold text-red-500 px-1">{errors.title.message}</p>}
             </div>
 
-            {/* Row 2: Date & Time */}
+            {/* Date & Time */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Date</label>
                 <input 
                   type="date"
                   {...register("date")}
-                  className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#E8541A]/20 focus:border-[#E8541A] transition-all outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                 />
               </div>
               <div className="space-y-2">
@@ -199,12 +201,12 @@ export default function WODModal({
                 <input 
                   type="time"
                   {...register("time")}
-                  className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#E8541A]/20 focus:border-[#E8541A] transition-all outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                 />
               </div>
             </div>
 
-            {/* Row 3: Duration & Capacity */}
+            {/* Duration & Capacity */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Duration (Min)</label>
@@ -212,7 +214,7 @@ export default function WODModal({
                   <input 
                     type="number"
                     {...register("durationMinutes", { valueAsNumber: true })}
-                    className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#E8541A]/20 focus:border-[#E8541A] transition-all outline-none"
+                    className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400 uppercase">Min</span>
                 </div>
@@ -222,40 +224,36 @@ export default function WODModal({
                 <input 
                   type="number"
                   {...register("capacity", { valueAsNumber: true })}
-                  className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#E8541A]/20 focus:border-[#E8541A] transition-all outline-none"
+                  className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                 />
               </div>
             </div>
 
-            {/* Edit Warning */}
-            {mode === "edit" && (wodClass?.bookedCount > 0) && (
-              <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center gap-3">
-                <AlertCircle className="text-amber-500 shrink-0" size={20} />
-                <p className="text-[11px] font-bold text-amber-900 leading-tight">
-                  This class has {wodClass.bookedCount} bookings — changing the time will automatically notify all members.
-                </p>
-              </div>
-            )}
-
-            {/* Row 4: Coach */}
+            {/* Coach */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Coach</label>
-              <select 
-                {...register("coach")}
-                className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#E8541A]/20 focus:border-[#E8541A] transition-all outline-none cursor-pointer"
-              >
-                <option value={session?.user?.name || "Coach"}>{session?.user?.name || "Coach"} (You)</option>
-              </select>
+              {userRole === 'instructor' ? (
+                <div className="w-full bg-gray-100 border border-gray-200 p-4 rounded-xl text-sm font-bold text-gray-500 cursor-not-allowed">
+                  {userName} (Locked)
+                  <input type="hidden" {...register("coach")} value={userName} />
+                </div>
+              ) : (
+                <input 
+                  {...register("coach")}
+                  placeholder="Coach Name"
+                  className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                />
+              )}
             </div>
 
-            {/* Row 5: Class Type (Pills) */}
+            {/* Class Type */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Class Type</label>
               <div className="flex gap-2 p-1 bg-gray-50 rounded-xl border border-gray-100">
                 {[
                   { id: "wod", label: "Regular WOD" },
                   { id: "strength", label: "Strength" },
-                  { id: "competition", label: "Competition Prep" }
+                  { id: "competition", label: "Comp Prep" }
                 ].map((type) => (
                   <button
                     key={type.id}
@@ -263,8 +261,8 @@ export default function WODModal({
                     onClick={() => setValue("classType", type.id as any)}
                     className={`flex-1 py-3 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
                       selectedType === type.id 
-                        ? "bg-[#E8541A] text-white border-[#E8541A] shadow-md shadow-orange-500/20" 
-                        : "bg-white text-gray-500 border-gray-200 hover:border-[#E8541A] hover:text-[#E8541A]"
+                        ? "bg-primary text-white border-primary shadow-md shadow-orange-500/20" 
+                        : "bg-white text-gray-500 border-gray-200 hover:border-primary hover:text-primary"
                     }`}
                   >
                     {type.label}
@@ -273,24 +271,24 @@ export default function WODModal({
               </div>
             </div>
 
-            {/* Row 6: Description */}
+            {/* Description */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Description/Notes</label>
               <textarea 
                 {...register("description")}
                 rows={3}
                 placeholder="Scaling options, equipment needed..."
-                className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#E8541A]/20 focus:border-[#E8541A] transition-all outline-none resize-none"
+                className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none"
               />
             </div>
           </div>
 
-          {/* Footer (Fixed) */}
+          {/* Footer */}
           <div className="p-8 pt-4 border-t border-gray-100 flex justify-between items-center bg-white shrink-0">
             <label className="flex items-center gap-3 cursor-pointer group">
               <div 
                 onClick={() => setValue("publishImmediately", !publishImmediately)}
-                className={`w-10 h-5 rounded-full transition-all relative ${publishImmediately ? "bg-[#E8541A]" : "bg-gray-200"}`}
+                className={`w-10 h-5 rounded-full transition-all relative ${publishImmediately ? "bg-primary" : "bg-gray-200"}`}
               >
                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${publishImmediately ? "left-6" : "left-1"}`} />
               </div>
@@ -308,7 +306,7 @@ export default function WODModal({
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-[#E8541A] text-white text-[10px] font-black uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center gap-2"
+                className="bg-primary text-white text-[10px] font-black uppercase tracking-widest px-8 py-3.5 rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center gap-2"
               >
                 {isSubmitting && <Loader2 size={14} className="animate-spin" />}
                 {mode === "create" ? "Save WOD" : "Update WOD"}

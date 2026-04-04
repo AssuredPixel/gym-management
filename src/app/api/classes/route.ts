@@ -21,9 +21,10 @@ export async function GET(request: Request) {
   try {
     const session = await auth();
     const userRole = (session?.user as any)?.role;
+    const userName = session?.user?.name;
     const gymId = (session?.user as any)?.gymId;
 
-    if (!session || userRole !== "owner" || !gymId) {
+    if (!session || !gymId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -40,10 +41,17 @@ export async function GET(request: Request) {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
 
-    const classes = await WODClass.find({
-      gymId: new mongoose.Types.ObjectId(gymId),
+    const query: any = {
+      gymId: new mongoose.Types.ObjectId(String(gymId)),
       dateTime: { $gte: weekStart, $lt: weekEnd }
-    }).sort({ dateTime: 1 }).lean();
+    };
+
+    // Filter by coach if the user is an instructor
+    if (userRole === "instructor") {
+      query.coach = userName;
+    }
+
+    const classes = await WODClass.find(query).sort({ dateTime: 1 }).lean();
 
     return NextResponse.json(classes);
   } catch (error) {
@@ -56,13 +64,20 @@ export async function POST(request: Request) {
   try {
     const session = await auth();
     const userRole = (session?.user as any)?.role;
+    const userName = session?.user?.name;
     const gymId = (session?.user as any)?.gymId;
 
-    if (!session || userRole !== "owner" || !gymId) {
+    if (!session || !gymId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
+    
+    // If instructor, force the coach to be themselves
+    if (userRole === "instructor") {
+      body.coach = userName;
+    }
+
     const validation = ClassSchema.safeParse(body);
 
     if (!validation.success) {
@@ -74,16 +89,16 @@ export async function POST(request: Request) {
 
     const newClass = await WODClass.create({
       ...data,
-      gymId: new mongoose.Types.ObjectId(gymId),
+      gymId: new mongoose.Types.ObjectId(String(gymId)),
       bookedCount: 0,
       status: 'scheduled'
     });
 
     // Log the activity
     await ActivityLog.create({
-      gymId: new mongoose.Types.ObjectId(gymId),
+      gymId: new mongoose.Types.ObjectId(String(gymId)),
       type: 'class_created',
-      description: `WOD ${newClass.title} created for ${new Date(newClass.dateTime).toLocaleDateString()}`
+      description: `${userRole === 'instructor' ? 'Coach' : 'Owner'} ${userName} created class: ${newClass.title}`
     });
 
     return NextResponse.json(newClass, { status: 201 });

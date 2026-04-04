@@ -12,10 +12,15 @@ export async function PUT(
   try {
     const session = await auth();
     const userRole = (session?.user as any)?.role;
+    const userName = session?.user?.name;
     const gymId = (session?.user as any)?.gymId;
 
-    if (!session || userRole !== "owner" || !gymId) {
+    if (!session || !gymId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (userRole !== "owner" && userRole !== "instructor") {
+      return NextResponse.json({ error: "Unauthorized role" }, { status: 403 });
     }
 
     const { id } = params;
@@ -29,24 +34,28 @@ export async function PUT(
 
     const booking = await Booking.findOne({ 
       _id: id,
-      gymId: new mongoose.Types.ObjectId(gymId) 
-    });
+      gymId: new mongoose.Types.ObjectId(String(gymId)) 
+    }).populate("wodClassId");
 
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    // Role-based verification
+    if (userRole === "instructor") {
+       const wodClass = booking.wodClassId as any;
+       if (wodClass.coach !== userName) {
+         return NextResponse.json({ error: "Forbidden: You are not the coach of this class" }, { status: 403 });
+       }
     }
 
     const oldStatus = booking.status;
 
     // Handle bookedCount sync
     if (oldStatus === 'booked' && status === 'cancelled') {
-      await WODClass.findByIdAndUpdate(booking.wodClassId, {
-        $inc: { bookedCount: -1 }
-      });
+      await WODClass.findByIdAndUpdate(booking.wodClassId, { $inc: { bookedCount: -1 } });
     } else if (oldStatus === 'cancelled' && status === 'booked') {
-      await WODClass.findByIdAndUpdate(booking.wodClassId, {
-        $inc: { bookedCount: 1 }
-      });
+      await WODClass.findByIdAndUpdate(booking.wodClassId, { $inc: { bookedCount: 1 } });
     }
 
     booking.status = status;

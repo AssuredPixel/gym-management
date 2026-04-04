@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { logout } from "@/lib/actions/auth";
 
 interface NavLinkProps {
   href: string;
@@ -56,12 +57,24 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="h-9 w-9 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold">
-              {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "M"}
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold">
+                {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : "M"}
+              </div>
+              <span className="text-sm font-semibold text-text-primary hidden sm:block">
+                {session?.user?.name || "Member"}
+              </span>
             </div>
-            <span className="text-sm font-semibold text-text-primary hidden sm:block">
-              {session?.user?.name || "Member"}
-            </span>
+            
+            {/* Divider */}
+            <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+
+            <button 
+              onClick={() => logout()}
+              className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors uppercase tracking-widest hidden sm:block"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </header>

@@ -112,8 +112,13 @@ export default function PaymentsTable({ payments, page, totalPages, onPageChange
               ))}
               {payments.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center text-xs font-black text-gray-300 uppercase tracking-[0.2em] italic">
-                    No transactions found
+                  <td colSpan={6} className="px-8 py-20">
+                    <div className="flex flex-col items-center justify-center p-8">
+                      <div className="bg-primary/5 h-20 w-20 rounded-full flex items-center justify-center mb-4">
+                        <Banknote className="w-10 h-10 text-primary" />
+                      </div>
+                      <p className="text-gray-500 text-sm font-bold text-center">No payments recorded yet.</p>
+                    </div>
                   </td>
                 </tr>
               )}

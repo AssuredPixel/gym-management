@@ -10,7 +10,7 @@ import {
   Loader2,
   RefreshCw
 } from "lucide-react";
-import CalendarGrid from "@/components/classes/CalendarGrid";
+import ClassList from "@/components/classes/ClassList";
 import WODModal from "@/components/classes/WODModal";
 import BookingsDrawer from "@/components/classes/BookingsDrawer";
 
@@ -145,14 +145,14 @@ export default function WODSchedulePage() {
         </div>
       </div>
 
-      {/* Calendar Grid */}
+      {/* Class Feed (Replaces Grid) */}
       {isLoading ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm h-[600px] flex flex-col items-center justify-center gap-3">
           <Loader2 className="animate-spin text-primary" size={32} />
           <p className="text-xs font-black text-gray-300 uppercase tracking-widest">Fetching Schedule...</p>
         </div>
       ) : (
-        <CalendarGrid 
+        <ClassList 
           weekStart={currentWeekStart} 
           classes={classes} 
           onEditClass={handleOpenEditModal}

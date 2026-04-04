@@ -6,6 +6,8 @@ import User from "@/models/User";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
 
+export const revalidate = 60;
+
 export async function GET(request: Request) {
   try {
     const session = await auth();

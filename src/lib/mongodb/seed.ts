@@ -18,8 +18,19 @@ export async function seedDatabase() {
         name: "BoxOS Fitness",
         ownerName: "James Carter",
         email: "contact@boxosfitness.com",
+        phone: "+234 812 345 6789",
+        address: "123 Gym Street, Victoria Island, Lagos",
         size: "medium",
         plan: "starter",
+        businessHours: [
+          { day: "Monday", open: "06:00", close: "21:00", isClosed: false },
+          { day: "Tuesday", open: "06:00", close: "21:00", isClosed: false },
+          { day: "Wednesday", open: "06:00", close: "21:00", isClosed: false },
+          { day: "Thursday", open: "06:00", close: "21:00", isClosed: false },
+          { day: "Friday", open: "06:00", close: "21:00", isClosed: false },
+          { day: "Saturday", open: "08:00", close: "18:00", isClosed: false },
+          { day: "Sunday", open: "08:00", close: "14:00", isClosed: true },
+        ]
       },
     },
     { upsert: true, new: true }
@@ -43,6 +54,66 @@ export async function seedDatabase() {
     { upsert: true, new: true }
   );
   console.log("Seeded Owner:", owner.email);
+
+  // ─── 2b. Instructors ──────────────────────────────────────────────────────
+  const instructorHash = await bcrypt.hash("password123", 10);
+  const instructorData = [
+    { name: "Coach Mike", email: "mike@boxos.com", phone: "+234 701 111 2222" },
+    { name: "Sarah Coach", email: "sarah@boxos.com", phone: "+234 701 333 4444" },
+  ];
+
+  for (const inst of instructorData) {
+    await User.findOneAndUpdate(
+      { email: inst.email },
+      {
+        $set: {
+          name: inst.name,
+          email: inst.email,
+          phone: inst.phone,
+          hashedPassword: instructorHash,
+          role: "instructor",
+          gymId: gym._id,
+          isActive: true,
+        },
+      },
+      { upsert: true }
+    );
+  }
+  console.log("Seeded Instructors");
+
+  // ─── 2c. Notifications ────────────────────────────────────────────────────
+  // Clear old notifications and add fresh ones
+  const Notification = (await import("@/models/Notification")).default;
+  await Notification.deleteMany({ userId: owner._id });
+  await Notification.create([
+    {
+      gymId: gym._id,
+      userId: owner._id,
+      title: "New Member Signup",
+      message: "Sarah Johnson has just joined as an annual member!",
+      type: "success",
+      isRead: false,
+      link: "/owner/dashboard/members"
+    },
+    {
+      gymId: gym._id,
+      userId: owner._id,
+      title: "Overdue Payment",
+      message: "Tom Hughes's monthly subscription payment has failed.",
+      type: "alert",
+      isRead: false,
+      link: "/owner/dashboard/payments"
+    },
+    {
+      gymId: gym._id,
+      userId: owner._id,
+      title: "System Update",
+      message: "The BoxOS V2.0 dashboard is now live. Enjoy the new features!",
+      type: "info",
+      isRead: true
+    }
+  ]);
+  console.log("Seeded Notifications");
 
   // ─── 3. Five Test Members ──────────────────────────────────────────────────
   const memberHash = await bcrypt.hash("password123", 10);

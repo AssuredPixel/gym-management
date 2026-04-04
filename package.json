@@ -21,6 +21,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.71.2",
     "react-hot-toast": "^2.6.0",
+    "react-paystack": "^6.0.0",
     "recharts": "^3.8.1",
     "resend": "^6.10.0",
     "zod": "^4.3.6"

@@ -250,7 +250,7 @@ export default function DashboardPage() {
                         <h4 className="text-lg font-black text-[#1A1A2E] mt-1 mb-2 group-hover:text-primary transition-colors">{cls.name}</h4>
                         <div className="flex justify-between items-center pt-3 border-t border-gray-50">
                             <span className="text-xs text-gray-500 font-medium">{cls.instructor}</span>
-                            <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-1 rounded-md">{cls.attendees.length}/{cls.capacity} spots</span>
+                            <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-1 rounded-md">{(cls.attendees?.length || 0)}/{cls.capacity} spots</span>
                         </div>
                     </div>
                 ))

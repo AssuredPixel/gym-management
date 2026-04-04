@@ -7,10 +7,11 @@ import Payment from "@/models/Payment";
 import WODClass from "@/models/WODClass";
 import ActivityLog from "@/models/ActivityLog";
 import mongoose from "mongoose";
+import Gym from "@/models/Gym";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
 

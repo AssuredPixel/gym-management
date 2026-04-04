@@ -12,9 +12,10 @@ export async function PUT(
   try {
     const session = await auth();
     const userRole = (session?.user as any)?.role;
+    const userName = session?.user?.name;
     const gymId = (session?.user as any)?.gymId;
 
-    if (!session || userRole !== "owner" || !gymId) {
+    if (!session || !gymId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -22,9 +23,24 @@ export async function PUT(
     const body = await request.json();
     await dbConnect();
 
-    const existingClass = await WODClass.findOne({ _id: id, gymId: new mongoose.Types.ObjectId(gymId) });
+    const existingClass = await WODClass.findOne({ 
+      _id: id, 
+      gymId: new mongoose.Types.ObjectId(String(gymId)) 
+    });
+    
     if (!existingClass) {
       return NextResponse.json({ error: "Class not found" }, { status: 404 });
+    }
+
+    // Role-based verification
+    if (userRole === "instructor") {
+       if (existingClass.coach !== userName) {
+         return NextResponse.json({ error: "Forbidden: You are not the coach of this class" }, { status: 403 });
+       }
+       // Force coach to stay as themselves
+       delete body.coach;
+    } else if (userRole !== "owner") {
+       return NextResponse.json({ error: "Unauthorized role" }, { status: 403 });
     }
 
     // Constraint: Cannot change dateTime if bookedCount > 0
@@ -59,18 +75,32 @@ export async function DELETE(
   try {
     const session = await auth();
     const userRole = (session?.user as any)?.role;
+    const userName = session?.user?.name;
     const gymId = (session?.user as any)?.gymId;
 
-    if (!session || userRole !== "owner" || !gymId) {
+    if (!session || !gymId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = params;
     await dbConnect();
 
-    const existingClass = await WODClass.findOne({ _id: id, gymId: new mongoose.Types.ObjectId(gymId) });
+    const existingClass = await WODClass.findOne({ 
+      _id: id, 
+      gymId: new mongoose.Types.ObjectId(String(gymId)) 
+    });
+    
     if (!existingClass) {
       return NextResponse.json({ error: "Class not found" }, { status: 404 });
+    }
+
+    // Role-based verification
+    if (userRole === "instructor") {
+       if (existingClass.coach !== userName) {
+         return NextResponse.json({ error: "Forbidden: You are not the coach of this class" }, { status: 403 });
+       }
+    } else if (userRole !== "owner") {
+       return NextResponse.json({ error: "Unauthorized role" }, { status: 403 });
     }
 
     let action = 'deleted';
